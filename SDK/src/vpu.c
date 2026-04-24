@@ -411,6 +411,16 @@ void VPUSetPal(struct EVideoContext *_context, const uint8_t _paletteIndex, cons
 	palettewrite32(_context->m_platform, _paletteIndex & 0xFF, MAKECOLORRGB24(_red, _green, _blue));
 }
 
+/*
+ * Sets a palette entry in the VPU's color palette.
+ * _paletteIndex specifies the palette slot to set.
+ * _color is a 32bit color value in ARGB order
+ */
+void VPUSetPal32(struct EVideoContext *_context, const uint8_t _paletteIndex, const uint32_t _color)
+{
+	palettewrite32(_context->m_platform, _paletteIndex & 0xFF, _color);
+}
+
  /*
   * Clears the current CPU write page with the specified color.
   * _colorWord is a 32-bit value representing the color to fill

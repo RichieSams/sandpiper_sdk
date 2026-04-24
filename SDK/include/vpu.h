@@ -62,6 +62,7 @@ void VPUGetDimensions(const enum EVideoMode _mode, uint32_t *_width, uint32_t *_
 void VPUNoop(struct EVideoContext *_context);
 void VPUSetScanoutAddress(struct EVideoContext *_context, const uint32_t _scanOutAddress64ByteAligned);
 void VPUSetPal(struct EVideoContext *_context, const uint8_t _paletteIndex, const uint32_t _red, const uint32_t _green, const uint32_t _blue);
+void VPUSetPal32(struct EVideoContext *_context, const uint8_t _paletteIndex, const uint32_t _color);
 void VPUSetVideoMode(struct EVideoContext *_context, const enum EVideoMode _mode, const enum EColorMode _cmode, const enum EVideoScanoutEnable _scanEnable);
 void VPUShiftCache(struct EVideoContext *_context, uint8_t _offset);
 void VPUShiftScanout(struct EVideoContext *_context, uint8_t _offset);

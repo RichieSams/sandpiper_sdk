@@ -165,7 +165,7 @@ int main(int argc, char **argv)
             {
                 gameState.playerBallAnimTicks = 0;
                 ++gameState.playerBallAnimFrame;
-                if (gameState.playerBallAnimFrame >= WATER_BALL_FRAME_COUNT)
+                if (gameState.playerBallAnimFrame >= WATER_BALL_64_FRAME_COUNT)
                 {
                     gameState.playerBallAnimFrame = 0;
                 }
@@ -179,10 +179,10 @@ int main(int argc, char **argv)
 
             uint8_t *dst = (uint8_t *)s_platform->sc->writepage;
 
-            masked_blit_8(dst, stride, VIDEO_WIDTH, VIDEO_HEIGHT, waterBallSprite[gameState.playerBallAnimFrame], WATER_BALL_W, WATER_BALL_H, 100, 100, 0x00);
+            masked_blit_8(dst, stride, VIDEO_WIDTH, VIDEO_HEIGHT, waterBall64Sprite[gameState.playerBallAnimFrame], WATER_BALL_64_W, WATER_BALL_64_H, 100, 100, 0x00);
 
             int len = snprintf(buffer, sizeof(buffer), "%d", frame);
-            VPUPrintString(s_platform->vx, 255, 254, 5, 5, buffer, len);
+            VPUPrintString(s_platform->vx, 1, 0, 5, 5, buffer, len);
         }
 
         // Queue vsync

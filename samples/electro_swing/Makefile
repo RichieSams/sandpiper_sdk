@@ -70,6 +70,10 @@ $(bin_dir)/%.o: $(src_dir)/%.c | $(bin_dir)
 $(TARGET): $(sdk_dir)/libsandpiper.a $(all_objs)
 	$(ARM_GCC) $(ARM_GCC_OPTS) -o $@ $(all_objs) -L$(sdk_dir) -lsandpiper $(ARM_GCC_LIBS)
 
+.PHONY: generate_assets
+generate_assets:
+	uv run ./generate_assets.py
+
 .PHONY: clean
 clean:
 ifeq ($(UNAME), Windows)

@@ -1,0 +1,35 @@
+#include "assets.h"
+
+#include <stdalign.h>
+
+// clang-format off
+alignas(16) const uint32_t colorPalette[256]  = {
+{%- for i in range(16) %}
+    {% for j in range(16) %}{{ color_palette[i * 16 + j] }}, {% endfor %}
+{%- endfor %}
+};
+// clang-format on
+
+{%- for sprite in sprites %}
+
+// clang-format off
+{%- for frame in sprite.frames %}
+static const uint8_t {{ sprite.nameTitleCase }}_{{ "%02d" | format(loop.index0) }}[{{sprite.nameUpperSnake }}_W * {{sprite.nameUpperSnake }}_H] = {
+{%- for i in range(sprite.height) %}
+    {% for j in range(sprite.width) %}{{ frame.paletteIndices[i * sprite.width + j] }}, {% endfor %}
+{%- endfor %}
+};
+
+{%- endfor %}
+// clang-format on
+
+const uint8_t *const {{ sprite.nameTitleCase }}Sprite[{{sprite.nameUpperSnake }}_FRAME_COUNT] = {
+{%- for frame in sprite.frames %}
+    {{ sprite.nameTitleCase }}_{{ "%02d" | format(loop.index0) }},
+{%- endfor %}
+};
+
+{%- endfor %}
+
+
+

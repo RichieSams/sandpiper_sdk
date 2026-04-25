@@ -1,0 +1,50 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build electro_swing",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "-C",
+        "${workspaceFolder}/samples/electro_swing",
+        "debug"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "scp: upload electro_swing",
+      "type": "shell",
+      "command": "scp",
+      "args": [
+        "-P",
+        "2222",
+        "${workspaceFolder}/samples/electro_swing/electro_swing",
+        "peta@127.0.0.1:/home/peta/"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "gdbserver: launch electro_swing",
+      "type": "shell",
+      "command": "ssh",
+      "args": [
+        "-p",
+        "2222",
+        "peta@127.0.0.1",
+        "nohup gdbserver --once :1234 /home/peta/electro_swing > /tmp/gdb.log 2>&1 &"
+      ],
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "build + deploy + debug electro_swing",
+      "dependsOn": [
+        "build electro_swing",
+        "scp: upload electro_swing",
+        "gdbserver: launch electro_swing"
+      ],
+      "dependsOrder": "sequence"
+    }
+  ]
+}

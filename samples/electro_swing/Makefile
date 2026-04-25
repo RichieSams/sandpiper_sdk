@@ -11,6 +11,7 @@ else
 endif
 
 TARGET = electro_swing
+DEBUG ?= 0
 
 default: $(TARGET)
 
@@ -34,8 +35,16 @@ ARM_GCC ?= arm-amd-linux-gnueabi-g++
 ARM_CC  ?= arm-amd-linux-gnueabi-gcc
 endif
 
-ARM_GCC_OPTS += -std=c++20 -Ofast -flto -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
-ARM_CC_OPTS  += -Ofast -flto -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
+ARCH_OPTS    := -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
+
+ifeq ($(DEBUG),1)
+OPT_OPTS     := -O0 -g3 -fno-omit-frame-pointer -fno-inline
+else
+OPT_OPTS     := -Ofast -flto
+endif
+
+ARM_GCC_OPTS += -std=c++20 $(OPT_OPTS) $(ARCH_OPTS)
+ARM_CC_OPTS  += $(OPT_OPTS) $(ARCH_OPTS)
 ARM_GCC_LIBS += -lgcc -lc -lm
 
 incs += -I$(src_dir) -I$(sdk_dir)/include
@@ -56,7 +65,7 @@ $(bin_dir):
 
 # Build SDK library if needed
 $(sdk_dir)/libsandpiper.a:
-	$(MAKE) -C $(sdk_dir)
+	$(MAKE) -C $(sdk_dir) DEBUG=$(DEBUG)
 
 # Compile local .cpp files
 $(bin_dir)/%.o: $(src_dir)/%.cpp | $(bin_dir)
@@ -69,6 +78,14 @@ $(bin_dir)/%.o: $(src_dir)/%.c | $(bin_dir)
 # Link target
 $(TARGET): $(sdk_dir)/libsandpiper.a $(all_objs)
 	$(ARM_GCC) $(ARM_GCC_OPTS) -o $@ $(all_objs) -L$(sdk_dir) -lsandpiper $(ARM_GCC_LIBS)
+
+.PHONY: debug
+debug:
+	$(MAKE) DEBUG=1
+
+.PHONY: release
+release:
+	$(MAKE) DEBUG=0
 
 .PHONY: generate_assets
 generate_assets:

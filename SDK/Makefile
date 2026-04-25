@@ -15,6 +15,7 @@ endif
 
 # Library name
 TARGET = libsandpiper.a
+DEBUG ?= 0
 
 # Directories
 SRC_DIR = src
@@ -40,10 +41,18 @@ ARM_AR  ?= arm-amd-linux-gnueabi-ar
 endif
 
 # Compiler flags
-ARM_CC_OPTS  += -Ofast -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
+ARCH_OPTS    := -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
+
+ifeq ($(DEBUG),1)
+ARM_CC_OPTS  += -O0 -g3 -fno-omit-frame-pointer
+else
+ARM_CC_OPTS  += -Ofast
 ARM_CC_OPTS  += -fdata-sections -ffunction-sections -fomit-frame-pointer
 ARM_CC_OPTS  += -fno-math-errno -fno-trapping-math -fstrict-aliasing -pipe -DNDEBUG
 ARM_CC_OPTS  += -falign-functions=16 -falign-loops=16
+endif
+
+ARM_CC_OPTS  += $(ARCH_OPTS)
 
 # Include paths
 INCS = -I$(INC_DIR)

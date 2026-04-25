@@ -46,6 +46,7 @@ endif
 ARM_GCC_OPTS += -std=c++20 $(OPT_OPTS) $(ARCH_OPTS)
 ARM_CC_OPTS  += $(OPT_OPTS) $(ARCH_OPTS)
 ARM_GCC_LIBS += -lgcc -lc -lm
+DEPFLAGS     := -MMD -MP
 
 incs += -I$(src_dir) -I$(sdk_dir)/include
 
@@ -58,6 +59,9 @@ cpp_objs := $(patsubst $(src_dir)/%.cpp,$(bin_dir)/%.o,$(cpp_srcs))
 c_objs   := $(patsubst $(src_dir)/%.c,$(bin_dir)/%.o,$(c_srcs))
 
 all_objs := $(cpp_objs) $(c_objs)
+all_deps := $(all_objs:.o=.d)
+
+-include $(all_deps)
 
 # Create bin directory
 $(bin_dir):
@@ -69,11 +73,11 @@ $(sdk_dir)/libsandpiper.a:
 
 # Compile local .cpp files
 $(bin_dir)/%.o: $(src_dir)/%.cpp | $(bin_dir)
-	$(ARM_GCC) $(ARM_GCC_OPTS) $(incs) -c $< -o $@
+	$(ARM_GCC) $(ARM_GCC_OPTS) $(DEPFLAGS) $(incs) -c $< -o $@
 
 # Compile local .c files
 $(bin_dir)/%.o: $(src_dir)/%.c | $(bin_dir)
-	$(ARM_CC) $(ARM_CC_OPTS) $(incs) -c $< -o $@
+	$(ARM_CC) $(ARM_CC_OPTS) $(DEPFLAGS) $(incs) -c $< -o $@
 
 # Link target
 $(TARGET): $(sdk_dir)/libsandpiper.a $(all_objs)

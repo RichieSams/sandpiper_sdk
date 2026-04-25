@@ -100,7 +100,9 @@ clean:
 ifeq ($(UNAME), Windows)
 	@-del /F /Q $(TARGET)
 	@-rmdir /S /Q $(bin_dir)
+	@-if exist "$(sdk_dir)\\libsandpiper.a" del /F /Q "$(sdk_dir)\\libsandpiper.a"
 else
 	@-rm -f $(TARGET)
 	@-rm -rf $(bin_dir)
+	@-rm -f $(sdk_dir)/libsandpiper.a
 endif

@@ -1,6 +1,3 @@
-#include <stdint.h>
-#include <stdlib.h>
-
 #include "assets.h"
 #include "simulation.h"
 #include "render.h"
@@ -9,6 +6,11 @@
 #include "core.h"
 #include "platform.h"
 #include "vpu.h"
+#include "controller.h"
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #define LOGIC_TICK_TIME_MS 16
 #define LOGIC_TICK_TIME_NS (LOGIC_TICK_TIME_MS * 1000000)
@@ -21,10 +23,14 @@ int main(int argc, char **argv)
     s_platform = SPInitPlatform();
 
     InitRenderState(s_platform);
-
     InitGameState(&gameState);
 
-    char buffer[128];
+    if (controller_open(CONTROLLER_MODE_AUTO) != CONTROLLER_OK)
+    {
+        printf("Failed to access controller\n");
+        exit(-1);
+    }
+
     uint64_t lastFrameStart = time_now_ns();
     uint64_t accumulatedFrameTime = 0;
     do

@@ -8,6 +8,8 @@
 
 #include "vpu.h"
 
+#include <stdio.h>
+
 #define VIDEO_MODE EVM_640_480
 #define VIDEO_COLOR ECM_8bit_Indexed
 #define VIDEO_WIDTH 640
@@ -51,7 +53,13 @@ void RenderFrame(struct SPPlatform *platform, GameState *state)
 
     uint8_t *dest = (uint8_t *)platform->sc->writepage;
 
-    maskedBlit8(dest, frameStride, VIDEO_WIDTH, VIDEO_HEIGHT, waterBall64Sprite[state->playerBallAnimFrame], WATER_BALL_64_W, WATER_BALL_64_H, state->playerBallX - (WATER_BALL_64_W / 2), state->playerBallY - (WATER_BALL_64_H / 2), 0x00);
+    maskedBlit8(dest, frameStride, VIDEO_WIDTH, VIDEO_HEIGHT, waterBall64Sprite[state->playerBall.animInfo.currentFrame], WATER_BALL_64_W, WATER_BALL_64_H, state->playerBall.posX - (WATER_BALL_64_W / 2), state->playerBall.posY - (WATER_BALL_64_H / 2), 0x00);
+
+    // Render the controller value
+    char buffer[16];
+    int len = snprintf(buffer, sizeof(buffer), "%d", state->controllerValue);
+
+    VPUPrintString(platform->vx, 1, 0, 1, 1, buffer, len);
 }
 
 static void maskedBlit8(uint8_t *dest, uint32_t destStride, int destW, int destH, const uint8_t *src, int srcW, int srcH, int destX, int destY, uint8_t key)

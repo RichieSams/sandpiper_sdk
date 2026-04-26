@@ -38,7 +38,7 @@ endif
 ARCH_OPTS    := -mcpu=cortex-a9 -mfpu=neon -mfloat-abi=hard
 
 ifeq ($(DEBUG),1)
-OPT_OPTS     := -O0 -g3 -fno-omit-frame-pointer -fno-inline
+OPT_OPTS     := -O0 -g3 -fno-omit-frame-pointer
 else
 OPT_OPTS     := -Ofast -flto
 endif

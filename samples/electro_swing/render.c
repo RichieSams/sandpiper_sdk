@@ -1,6 +1,7 @@
 #include "render.h"
 
 #include "assets.h"
+#include "clock.h"
 
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
 #include <arm_neon.h>
@@ -47,19 +48,26 @@ void InitRenderState(struct SPPlatform *platform)
     platform->sc->framebufferB = &frameBufferB;
 }
 
-void RenderFrame(struct SPPlatform *platform, GameState *state)
+void RenderFrame(struct SPPlatform *platform, GameState *state, FrameTimes *frameTimes)
 {
+    uint64_t start = time_now_ns();
+
     VPUClear(platform->vx, 0x0);
 
     uint8_t *dest = (uint8_t *)platform->sc->writepage;
 
     maskedBlit8(dest, frameStride, VIDEO_WIDTH, VIDEO_HEIGHT, waterBall64Sprite[state->playerBall.animInfo.currentFrame], WATER_BALL_64_W, WATER_BALL_64_H, state->playerBall.posX - (WATER_BALL_64_W / 2), state->playerBall.posY - (WATER_BALL_64_H / 2), 0x00);
 
-    // Render the controller value
-    char buffer[16];
-    int len = snprintf(buffer, sizeof(buffer), "%d", state->controllerValue);
+    frameTimes->render = (uint32_t)(time_now_ns() - start);
 
+    // Render the frame times
+    char buffer[32];
+    int len = snprintf(buffer, sizeof(buffer), "Total: %0.2fms", (float)frameTimes->total / 1000000.0f);
     VPUPrintString(platform->vx, 1, 0, 1, 1, buffer, len);
+    len = snprintf(buffer, sizeof(buffer), "Simulation: %0.2fms", (float)frameTimes->simulation / 1000000.0f);
+    VPUPrintString(platform->vx, 1, 0, 1, 3, buffer, len);
+    len = snprintf(buffer, sizeof(buffer), "Render: %0.2fms", (float)frameTimes->render / 1000000.0f);
+    VPUPrintString(platform->vx, 1, 0, 1, 5, buffer, len);
 }
 
 static void maskedBlit8(uint8_t *dest, uint32_t destStride, int destW, int destH, const uint8_t *src, int srcW, int srcH, int destX, int destY, uint8_t key)

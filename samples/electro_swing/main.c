@@ -2,6 +2,7 @@
 #include "simulation.h"
 #include "render.h"
 #include "clock.h"
+#include "telemetry.h"
 
 #include "core.h"
 #include "platform.h"
@@ -11,9 +12,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#define LOGIC_TICK_TIME_MS 16
-#define LOGIC_TICK_TIME_NS (LOGIC_TICK_TIME_MS * 1000000)
 
 static struct SPPlatform *s_platform = NULL;
 GameState gameState;
@@ -31,8 +29,9 @@ int main(int argc, char **argv)
         exit(-1);
     }
 
+    FrameTimes frameTimes = {};
     uint64_t lastFrameStart = time_now_ns();
-    uint64_t accumulatedFrameTime = 0;
+    uint32_t accumulatedFrameTime = 0;
     do
     {
         // Vsync barrier
@@ -43,18 +42,23 @@ int main(int argc, char **argv)
         VPUSwapPages(s_platform->vx, s_platform->sc);
 
         uint64_t now = time_now_ns();
-        uint64_t timeDelta = now - lastFrameStart;
+        uint32_t timeDelta = (uint32_t)(now - lastFrameStart);
         lastFrameStart = now;
+        frameTimes.total = timeDelta;
 
         accumulatedFrameTime += timeDelta;
         while (accumulatedFrameTime > LOGIC_TICK_TIME_NS)
         {
+            uint32_t start = time_now_ns();
+
             accumulatedFrameTime -= LOGIC_TICK_TIME_NS;
             RunGameTick(&gameState);
+
+            frameTimes.simulation = (uint32_t)(time_now_ns() - start);
         }
 
         // Render
-        RenderFrame(s_platform, &gameState);
+        RenderFrame(s_platform, &gameState, &frameTimes);
 
         // Queue vsync
         // This will be processed by the VPU asynchronously when the video beam reaches the vertical blanking interval (vblank).

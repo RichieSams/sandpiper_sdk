@@ -3,6 +3,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define LOGIC_TICK_TIME_MS 16
+#define LOGIC_TICK_TIME_NS (LOGIC_TICK_TIME_MS * 1000000)
+
 typedef struct
 {
     int currentFrame;

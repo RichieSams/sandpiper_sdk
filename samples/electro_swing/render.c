@@ -2,6 +2,7 @@
 
 #include "assets.h"
 #include "clock.h"
+#include "util.h"
 
 #if defined(__ARM_NEON) || defined(__ARM_NEON__)
 #include <arm_neon.h>
@@ -10,6 +11,7 @@
 #include "vpu.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define VIDEO_MODE EVM_640_480
 #define VIDEO_COLOR ECM_8bit_Indexed
@@ -21,6 +23,8 @@ struct SPSizeAlloc frameBufferA;
 struct SPSizeAlloc frameBufferB;
 
 static void maskedBlit8(uint8_t *dest, uint32_t destStride, int destW, int destH, const uint8_t *src, int srcW, int srcH, int destX, int destY, uint8_t key);
+static void drawCircle(uint8_t *fb, uint32_t stride, int cx, int cy, int radius, uint8_t color);
+static void drawLine(uint8_t *fb, uint32_t stride, int x0, int y0, int x1, int y1, uint8_t color);
 
 void InitRenderState(struct SPPlatform *platform)
 {
@@ -56,7 +60,140 @@ void RenderFrame(struct SPPlatform *platform, GameState *state, FrameTimes *fram
 
     uint8_t *dest = (uint8_t *)platform->sc->writepage;
 
-    maskedBlit8(dest, frameStride, VIDEO_WIDTH, VIDEO_HEIGHT, waterBall64Sprite[state->playerBall.animInfo.currentFrame], WATER_BALL_64_W, WATER_BALL_64_H, state->playerBall.posX - (WATER_BALL_64_W / 2), state->playerBall.posY - (WATER_BALL_64_H / 2), 0x00);
+    // Render the map
+    // TODO: Implement for real
+    drawCircle(dest, frameStride, 200, 200, 20, 1);
+
+    // Render the player
+
+    // Pick the sprite based on the direction they're going
+    const uint8_t *sprite;
+    switch (state->playerBall.state)
+    {
+    case PLAYER_BALL_FREE:
+        // TODO: Do the math
+        sprite = waterBall000Sprite[state->playerBall.animInfo.currentFrame];
+        break;
+    case PLAYER_BALL_ORBIT:
+        if ((state->playerBall.orbit.theta >= (PI + PI_DIV_2 + PI_DIV_4 + PI_DIV_8) && state->playerBall.orbit.theta < (PI + PI)) || (state->playerBall.orbit.theta >= 0 && state->playerBall.orbit.theta < PI_DIV_8))
+        {
+            // East
+            if (state->playerBall.orbit.angularVelocity > 0)
+            {
+                // Clockwise
+                sprite = waterBall180Sprite[state->playerBall.animInfo.currentFrame];
+            }
+            else
+            {
+                // Counter-clockwise
+                sprite = waterBall000Sprite[state->playerBall.animInfo.currentFrame];
+            }
+        }
+        else if (state->playerBall.orbit.theta >= PI_DIV_8 && state->playerBall.orbit.theta < (PI_DIV_4 + PI_DIV_8))
+        {
+            // South-East
+            if (state->playerBall.orbit.angularVelocity > 0)
+            {
+                // Clockwise
+                sprite = waterBall225Sprite[state->playerBall.animInfo.currentFrame];
+            }
+            else
+            {
+                // Counter-clockwise
+                sprite = waterBall045Sprite[state->playerBall.animInfo.currentFrame];
+            }
+        }
+        else if (state->playerBall.orbit.theta >= (PI_DIV_4 + PI_DIV_8) && state->playerBall.orbit.theta < (PI_DIV_2 + PI_DIV_8))
+        {
+            // South
+            if (state->playerBall.orbit.angularVelocity > 0)
+            {
+                // Clockwise
+                sprite = waterBall270Sprite[state->playerBall.animInfo.currentFrame];
+            }
+            else
+            {
+                // Counter-clockwise
+                sprite = waterBall090Sprite[state->playerBall.animInfo.currentFrame];
+            }
+        }
+        else if (state->playerBall.orbit.theta >= (PI_DIV_2 + PI_DIV_8) && state->playerBall.orbit.theta < (PI_DIV_2 + PI_DIV_4 + PI_DIV_8))
+        {
+            // South-West
+            if (state->playerBall.orbit.angularVelocity > 0)
+            {
+                // Clockwise
+                sprite = waterBall315Sprite[state->playerBall.animInfo.currentFrame];
+            }
+            else
+            {
+                // Counter-clockwise
+                sprite = waterBall135Sprite[state->playerBall.animInfo.currentFrame];
+            }
+        }
+        else if (state->playerBall.orbit.theta >= (PI_DIV_2 + PI_DIV_4 + PI_DIV_8) && state->playerBall.orbit.theta < (PI + PI_DIV_8))
+        {
+            // West
+            if (state->playerBall.orbit.angularVelocity > 0)
+            {
+                // Clockwise
+                sprite = waterBall000Sprite[state->playerBall.animInfo.currentFrame];
+            }
+            else
+            {
+                // Counter-clockwise
+                sprite = waterBall180Sprite[state->playerBall.animInfo.currentFrame];
+            }
+        }
+        else if (state->playerBall.orbit.theta >= (PI + PI_DIV_8) && state->playerBall.orbit.theta < (PI + PI_DIV_4 + PI_DIV_8))
+        {
+            // North-West
+            if (state->playerBall.orbit.angularVelocity > 0)
+            {
+                // Clockwise
+                sprite = waterBall045Sprite[state->playerBall.animInfo.currentFrame];
+            }
+            else
+            {
+                // Counter-clockwise
+                sprite = waterBall225Sprite[state->playerBall.animInfo.currentFrame];
+            }
+        }
+        else if (state->playerBall.orbit.theta >= (PI + PI_DIV_4 + PI_DIV_8) && state->playerBall.orbit.theta < (PI + PI_DIV_2 + PI_DIV_8))
+        {
+            // North
+            if (state->playerBall.orbit.angularVelocity > 0)
+            {
+                // Clockwise
+                sprite = waterBall090Sprite[state->playerBall.animInfo.currentFrame];
+            }
+            else
+            {
+                // Counter-clockwise
+                sprite = waterBall270Sprite[state->playerBall.animInfo.currentFrame];
+            }
+        }
+        else if (state->playerBall.orbit.theta >= (PI + PI_DIV_2 + PI_DIV_8) && state->playerBall.orbit.theta < (PI + PI_DIV_2 + PI_DIV_4 + PI_DIV_8))
+        {
+            // North-East
+            if (state->playerBall.orbit.angularVelocity > 0)
+            {
+                // Clockwise
+                sprite = waterBall135Sprite[state->playerBall.animInfo.currentFrame];
+            }
+            else
+            {
+                // Counter-clockwise
+                sprite = waterBall315Sprite[state->playerBall.animInfo.currentFrame];
+            }
+        }
+
+        // Render the lasso between the player and the anchor
+        drawLine(dest, frameStride, state->playerBall.orbit.originX, state->playerBall.orbit.originY, state->playerBall.posX, state->playerBall.posY, 7);
+
+        break;
+    }
+    maskedBlit8(dest, frameStride, VIDEO_WIDTH, VIDEO_HEIGHT, sprite, WATER_BALL_W, WATER_BALL_H, state->playerBall.posX - (WATER_BALL_W / 2), state->playerBall.posY - (WATER_BALL_H / 2), 0x00);
 
     frameTimes->render = (uint32_t)(time_now_ns() - start);
 
@@ -126,6 +263,69 @@ static void maskedBlit8(uint8_t *dest, uint32_t destStride, int destW, int destH
             uint8_t px = s[x];
             if (px != key)
                 d[x] = px;
+        }
+    }
+}
+
+static inline void setPixel(uint8_t *fb, uint32_t stride, int x, int y, uint8_t color)
+{
+    fb[y * stride + x] = color;
+}
+
+// Draw a circle using midpoint algorithm
+static void drawCircle(uint8_t *fb, uint32_t stride, int cx, int cy, int radius, uint8_t color)
+{
+    int x = radius;
+    int y = 0;
+    int err = 0;
+
+    while (x >= y)
+    {
+        setPixel(fb, stride, cx + x, cy + y, color);
+        setPixel(fb, stride, cx + y, cy + x, color);
+        setPixel(fb, stride, cx - y, cy + x, color);
+        setPixel(fb, stride, cx - x, cy + y, color);
+        setPixel(fb, stride, cx - x, cy - y, color);
+        setPixel(fb, stride, cx - y, cy - x, color);
+        setPixel(fb, stride, cx + y, cy - x, color);
+        setPixel(fb, stride, cx + x, cy - y, color);
+
+        y++;
+        if (err <= 0)
+        {
+            err += 2 * y + 1;
+        }
+        if (err > 0)
+        {
+            x--;
+            err -= 2 * x + 1;
+        }
+    }
+}
+
+static void drawLine(uint8_t *fb, uint32_t stride, int x0, int y0, int x1, int y1, uint8_t color)
+{
+    int dx = abs(x1 - x0);
+    int dy = -abs(y1 - y0);
+    int sx = x0 < x1 ? 1 : -1;
+    int sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy;
+
+    while (true)
+    {
+        setPixel(fb, stride, x0, y0, color);
+        if (x0 == x1 && y0 == y1)
+            break;
+        int e2 = 2 * err;
+        if (e2 >= dy)
+        {
+            err += dy;
+            x0 += sx;
+        }
+        if (e2 <= dx)
+        {
+            err += dx;
+            y0 += sy;
         }
     }
 }

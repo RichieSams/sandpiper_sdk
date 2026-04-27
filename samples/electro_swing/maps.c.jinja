@@ -1,0 +1,46 @@
+#include "maps.h"
+
+#include "assets.h"
+#include "util.h"
+
+{%- for map in maps %}
+static const uint8_t *const {{ map.name }}Tiles[] = {
+{%- for j in range(map.height) %}
+    {% for i in range(map.width) %}{{ map.tiles[j*map.width+i]}}, {% endfor %}
+{%- endfor %}
+};
+
+static const Anchor {{ map.name }}Anchors[] = {
+    {%- for anchor in map.anchors %}
+    {
+        .posX = {{ anchor.pos_x }},
+        .posY = {{ anchor.pos_y }},
+        .radius = 100,
+    },
+    {%- endfor %}
+};
+
+
+const Map {{ map.name }} = {
+    .goalX0 = {{ map.goal_x0 }},
+    .goalY0 = {{ map.goal_y0 }},
+    .goalX1 = {{ map.goal_x1 }},
+    .goalY1 = {{ map.goal_y1 }},
+
+    .startX = (10 * 32) + 16,
+    .startY = (42 * 32) + 16,
+
+    .tiles = {{ map.name }}Tiles,
+    .tileStride = {{ map.width }},
+    .numTiles = {{ map.tiles | length }},
+
+    .mapWidth = {{ map.width * 32 }},
+    .mapHeight = {{ map.height * 32 }},
+
+    .anchors = {{ map.name }}Anchors,
+    .numAnchors = {{ map.anchors | length }},
+};
+
+{%- endfor %}
+
+

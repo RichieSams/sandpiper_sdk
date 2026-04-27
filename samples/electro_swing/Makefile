@@ -95,6 +95,10 @@ release:
 generate_assets:
 	uv run ./generate_assets.py
 
+.PHONY: generate_maps
+generate_maps:
+	uv run ./generate_maps.py
+
 .PHONY: clean
 clean:
 ifeq ($(UNAME), Windows)

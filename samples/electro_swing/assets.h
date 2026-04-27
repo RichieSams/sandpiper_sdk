@@ -45,3 +45,15 @@ extern const uint8_t *const waterBall225Sprite[WATER_BALL_225_FRAME_COUNT];
 extern const uint8_t *const waterBall270Sprite[WATER_BALL_270_FRAME_COUNT];
 extern const uint8_t *const waterBall315Sprite[WATER_BALL_315_FRAME_COUNT];
 
+#define TILE_SIZE 32
+
+extern const uint8_t waterTileVertical[TILE_SIZE * TILE_SIZE];
+extern const uint8_t waterTileHorizontal[TILE_SIZE * TILE_SIZE];
+extern const uint8_t waterTileDiagonalSouthEast[TILE_SIZE * TILE_SIZE];
+extern const uint8_t waterTileDiagonalSouthWest[TILE_SIZE * TILE_SIZE];
+extern const uint8_t anchorTile[TILE_SIZE * TILE_SIZE];
+extern const uint8_t wallTile[TILE_SIZE * TILE_SIZE];
+extern const uint8_t goalTopLeftTile[TILE_SIZE * TILE_SIZE];
+extern const uint8_t goalTopRightTile[TILE_SIZE * TILE_SIZE];
+extern const uint8_t goalBottomLeftTile[TILE_SIZE * TILE_SIZE];
+extern const uint8_t goalBottomRightTile[TILE_SIZE * TILE_SIZE];

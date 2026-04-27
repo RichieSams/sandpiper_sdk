@@ -113,7 +113,22 @@ def build_context(assets_dir: Path) -> dict:
     # Initialize the palette with any manual colors we want that aren't necessarily in sprites
     color_to_index = {
         0x00000000: 0,
-        0x00FFFFFF: 1,
+        0x00121C18: 1,  # W0 - deep murky base
+        0x00243A30: 2,  # W1 - mid water
+        0x00486E5C: 3,  # W2 - light streak
+        0x0078A082: 4,  # W3 - foam highlight
+        0x001C1C1C: 5,  # S0 - dark stone
+        0x003C3C3C: 6,  # S1 - mid stone
+        0x006E6E6E: 7,  # S2 - light stone
+        0x00282C30: 8,  # M0 - dark metal
+        0x0078828C: 9,  # M1 - light metal
+        0x00965028: 10,  # rust accent
+        0x003C78B4: 11,  # A0 - muted blue
+        0x005AB4FF: 12,  # A1 - bright cyan
+        0x00C8DCFF: 13,  # highlight sparkle
+        0x00502814: 14,  # grime / stain
+        0x008CB43C: 15,  # moss tint
+        0x00FFFFFF: 16,  # Pure white
     }
     palette: List[int] = list(color_to_index.keys())
 

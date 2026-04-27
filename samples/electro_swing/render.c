@@ -22,9 +22,10 @@ uint32_t frameStride;
 struct SPSizeAlloc frameBufferA;
 struct SPSizeAlloc frameBufferB;
 
-static void maskedBlit8(uint8_t *dest, uint32_t destStride, int destW, int destH, const uint8_t *src, int srcW, int srcH, int destX, int destY, uint8_t key);
+static void maskedBlit8(uint8_t *frameBuffer, uint32_t destStride, int destW, int destH, const uint8_t *src, int srcW, int srcH, int destX, int destY, uint8_t key);
 static void drawCircle(uint8_t *fb, uint32_t stride, int cx, int cy, int radius, uint8_t color);
 static void drawLine(uint8_t *fb, uint32_t stride, int x0, int y0, int x1, int y1, uint8_t color);
+static void DrawMap(GameState *state, uint8_t *frameBuffer, uint16_t viewportX, uint16_t viewportY);
 
 void InitRenderState(struct SPPlatform *platform)
 {
@@ -60,9 +61,36 @@ void RenderFrame(struct SPPlatform *platform, GameState *state, FrameTimes *fram
 
     uint8_t *dest = (uint8_t *)platform->sc->writepage;
 
+    // Calculate the viewport
+    // Center on the player, but clamp to the map boundaries
+    uint16_t viewportX = 0;
+    uint16_t viewportY = 1;
+    {
+        int32_t clampedPlayerPosX = state->playerBall.posX;
+        if (clampedPlayerPosX - (VIDEO_WIDTH / 2) < 0)
+        {
+            clampedPlayerPosX = VIDEO_WIDTH / 2;
+        }
+        if (clampedPlayerPosX + (VIDEO_WIDTH / 2) > state->currentMap->mapWidth)
+        {
+            clampedPlayerPosX = state->currentMap->mapWidth - (VIDEO_WIDTH / 2);
+        }
+        viewportX = (uint16_t)clampedPlayerPosX - (VIDEO_WIDTH / 2);
+
+        int32_t clampedPlayerPosY = state->playerBall.posY;
+        if (clampedPlayerPosY - (VIDEO_HEIGHT / 2) < 0)
+        {
+            clampedPlayerPosY = VIDEO_HEIGHT / 2;
+        }
+        if (clampedPlayerPosY + (VIDEO_HEIGHT / 2) > state->currentMap->mapHeight)
+        {
+            clampedPlayerPosY = state->currentMap->mapHeight - (VIDEO_HEIGHT / 2);
+        }
+        viewportY = (uint16_t)clampedPlayerPosY - (VIDEO_HEIGHT / 2);
+    }
+
     // Render the map
-    // TODO: Implement for real
-    drawCircle(dest, frameStride, 200, 200, 20, 1);
+    DrawMap(state, dest, viewportX, viewportY);
 
     // Render the player
 
@@ -193,18 +221,25 @@ void RenderFrame(struct SPPlatform *platform, GameState *state, FrameTimes *fram
 
         break;
     }
-    maskedBlit8(dest, frameStride, VIDEO_WIDTH, VIDEO_HEIGHT, sprite, WATER_BALL_W, WATER_BALL_H, state->playerBall.posX - (WATER_BALL_W / 2), state->playerBall.posY - (WATER_BALL_H / 2), 0x00);
+
+    // Calculate the sprite placement
+
+    // Sprite is positioned from top left, not the center
+    uint16_t playerBallSpritePosX = state->playerBall.posX - (WATER_BALL_W / 2);
+    uint16_t playerBallSpritePosY = state->playerBall.posY - (WATER_BALL_H / 2);
+
+    maskedBlit8(dest, frameStride, VIDEO_WIDTH, VIDEO_HEIGHT, sprite, WATER_BALL_W, WATER_BALL_H, playerBallSpritePosX - viewportX, playerBallSpritePosY - viewportY, 0x00);
 
     frameTimes->render = (uint32_t)(time_now_ns() - start);
 
     // Render the frame times
     char buffer[32];
     int len = snprintf(buffer, sizeof(buffer), "Total: %0.2fms", (float)frameTimes->total / 1000000.0f);
-    VPUPrintString(platform->vx, 1, 0, 1, 1, buffer, len);
+    VPUPrintString(platform->vx, 16, 0, 1, 1, buffer, len);
     len = snprintf(buffer, sizeof(buffer), "Simulation: %0.2fms", (float)frameTimes->simulation / 1000000.0f);
-    VPUPrintString(platform->vx, 1, 0, 1, 3, buffer, len);
+    VPUPrintString(platform->vx, 16, 0, 1, 3, buffer, len);
     len = snprintf(buffer, sizeof(buffer), "Render: %0.2fms", (float)frameTimes->render / 1000000.0f);
-    VPUPrintString(platform->vx, 1, 0, 1, 5, buffer, len);
+    VPUPrintString(platform->vx, 16, 0, 1, 5, buffer, len);
 }
 
 static void maskedBlit8(uint8_t *dest, uint32_t destStride, int destW, int destH, const uint8_t *src, int srcW, int srcH, int destX, int destY, uint8_t key)
@@ -326,6 +361,51 @@ static void drawLine(uint8_t *fb, uint32_t stride, int x0, int y0, int x1, int y
         {
             err += dx;
             y0 += sy;
+        }
+    }
+}
+
+static inline uint16_t AxisOutsideDistance(uint16_t p, uint16_t lo, uint16_t hi)
+{
+    // Point is less than the AABB
+    // Calculate how far away it is
+    if (p < lo)
+    {
+        return lo - p;
+    }
+    // Point is greater than the AABB
+    // Calculate how far away it is
+    if (p > hi)
+    {
+        return p - hi;
+    }
+    // Point is inside the AABB
+    return 0;
+}
+
+static bool AnchorIsVisible(Anchor const *anchor, uint16_t viewportX, uint16_t viewportY)
+{
+    uint16_t dx = AxisOutsideDistance(anchor->posX, viewportX, viewportX + VIDEO_WIDTH);
+    uint16_t dy = AxisOutsideDistance(anchor->posY, viewportY, viewportY + VIDEO_HEIGHT);
+
+    uint16_t dist2 = dx * dx + dy * dy;
+    uint16_t r2 = anchor->radius * anchor->radius;
+
+    return dist2 < r2;
+}
+
+static void DrawMap(GameState *state, uint8_t *frameBuffer, uint16_t viewportX, uint16_t viewportY)
+{
+    // TODO: Draw all the tiles
+
+    for (uint16_t i = 0; i < state->currentMap->numAnchors; ++i)
+    {
+        Anchor const *anchor = &state->currentMap->anchors[i];
+
+        // Check if the anchor is visible
+        if (AnchorIsVisible(anchor, viewportX, viewportY))
+        {
+            drawCircle(frameBuffer, frameStride, anchor->posX - viewportX, anchor->posY - viewportY, anchor->radius, 16);
         }
     }
 }

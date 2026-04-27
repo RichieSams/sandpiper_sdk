@@ -7,7 +7,9 @@
 #include "vec.h"
 
 #define ORBIT_VELOCITY_INCREASE 0.0003f
+#define ORBIT_MIN_VELOCITY 0.01f
 #define ORBIT_MAX_VELOCITY 0.08f
+#define ORBIT_INITIAL_VELOCITY ORBIT_MIN_VELOCITY
 
 void InitGameState(GameState *state)
 {
@@ -16,14 +18,12 @@ void InitGameState(GameState *state)
 
     state->playerBall.animInfo.animTicks = 0;
     state->playerBall.animInfo.currentFrame = 0;
-    state->playerBall.state = PLAYER_BALL_ORBIT;
-    state->playerBall.orbit.originX = 200;
-    state->playerBall.orbit.originY = 200;
-    state->playerBall.orbit.radius = 100;
-    state->playerBall.orbit.angularVelocity = 0.01f;
-    state->playerBall.orbit.theta = 0.0;
-    state->playerBall.posX = 50;
-    state->playerBall.posY = 50;
+    state->playerBall.state = PLAYER_BALL_FREE;
+
+    // "Load" map 1
+    state->currentMap = &map1;
+    state->playerBall.posX = map1.startX;
+    state->playerBall.posY = map1.startY;
 }
 
 void RunGameTick(GameState *state)

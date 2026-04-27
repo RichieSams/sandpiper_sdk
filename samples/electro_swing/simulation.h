@@ -1,5 +1,7 @@
 #pragma once
 
+#include "maps.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -59,6 +61,8 @@ typedef struct
     bool gameplayPaused;
 
     PlayerBall playerBall;
+
+    Map const *currentMap;
 } GameState;
 
 void InitGameState(GameState *state);
